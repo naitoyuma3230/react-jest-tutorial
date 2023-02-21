@@ -9,18 +9,31 @@ describe("AsyncCounter", () => {
   })
 
   describe("click:count:カウントアップ", () => {
-    test("ボタン押下 1 秒後は 1 カウントアップ", () => {
-      jest.useFakeTimers() /** 時間詐称 */
+    test("ボタン押下 1 秒後のtextは「AsyncCount: 1」", () => {
+      // AsyncCounterのクリックイベントにはsetTimeoutで1000mm秒後のカウントアップが設定されている
+      // asinc/awaitでsleep関数を作成し、1秒待つことも可能であるが時間効率が悪い
+      jest.useFakeTimers()
       render(<AsyncCounter />)
+      // 描画されたtextからDOMを取得する関数
       const button = screen.getByText("AsyncIncrement")
       fireEvent.click(button)
       act(() => {
+        // 待機時間を経過させる。setTimeout, setIntervalなど
         jest.runAllTimers()
       })
       screen.getByText("AsyncCount: 1")
-      jest.useRealTimers() /** 時を戻そう */
+      // useFakeTimersの使用を終了する
+      jest.useRealTimers()
     })
   })
+
+  /*
+    setTimeout(() => console.log("timeout"))
+    Promise.resolve().then(() => console.log("resolved"))
+    console.log("sync")
+    通常タスク->マクロタスク->マイクロタスク
+    上記なら、sync -> resolved -> timeout の順に出力
+  */
 
   describe("click:count:ボタン活性・非活性", () => {
     test("ボタン押下直後はボタンが非活性", () => {
@@ -30,15 +43,18 @@ describe("AsyncCounter", () => {
       expect(button).toBeDisabled()
     })
     test("ボタン押下 1 秒後はボタンが活性", () => {
-      jest.useFakeTimers() /** 時間詐称 */
+      jest.useFakeTimers()
       render(<AsyncCounter />)
       const button = screen.getByText("AsyncIncrement")
       fireEvent.click(button)
       act(() => {
+        // 全ての待機時間を経過させる
         jest.runAllTimers()
       })
+      //  React state updates should be wrapped into act(...)
       expect(button).not.toBeDisabled()
-      jest.useRealTimers() /** 時を戻そう */
+      // 時間経過を戻す
+      jest.useRealTimers()
     })
   })
 
@@ -50,7 +66,7 @@ describe("AsyncCounter", () => {
       expect(screen.queryByText("...Loading")).toBeInTheDocument()
     })
     test("ボタン押下直後はローディングが非表示", () => {
-      jest.useFakeTimers() /** 時間詐称 */
+      jest.useFakeTimers()
       render(<AsyncCounter />)
       const button = screen.getByText("AsyncIncrement")
       fireEvent.click(button)
